@@ -1,0 +1,6 @@
+[submodule "comm"]
+	path = comm
+	url = https://github.com/m-dna/comm.git
+[submodule "common"]
+	path = common
+	url = https://github.com/m-dna/common.git
