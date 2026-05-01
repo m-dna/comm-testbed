@@ -56,9 +56,9 @@
 #include "dto/missile_target_state.h"
 #include "dto/navigation_test_command.h"
 #include "dto/one_test_result.h"
-#include "dto/pin_control_main_command.h"
-#include "dto/pin_control_req.h"
-#include "dto/pin_control_res.h"
+#include "dto/fin_control_main_command.h"
+#include "dto/fin_control_req.h"
+#include "dto/fin_control_res.h"
 #include "dto/position_req.h"
 #include "dto/position_res.h"
 #include "dto/reboot_command.h"
@@ -78,16 +78,6 @@
 #include "fsm/act_status.h"
 #include "fsm/gcu_status.h"
 #include "fsm/ins_status.h"
-
-void receive_callback(IcdId id, uint8_t *data, size_t len) {
-  if(id==IcdId::COMM_RELIABLE_TEST){
-    CommReliableTest *cmd = reinterpret_cast<CommReliableTest*>(data);
-    xil_printf("Received data with ICD ID:%04X, length:%d, COMM_RELIABLE_TEST received: counter=%d\r\n", static_cast<uint16_t>(id), len , cmd->counter);
-  }
-  else {
-    xil_printf("Unknown ICD ID received: %d\r\n", static_cast<int>(id));
-  }
-}
 
 
 void new_callback(IcdId id, uint8_t *data, size_t len) {
@@ -131,52 +121,56 @@ Network::ICommunication *i_communication = nullptr;
 void status_task_test1(void *pvParameters) {
   CommReliableTest comm_reliable_test = {.message_id = IcdId::COMM_RELIABLE_TEST, .counter = 0};
   while (1) {
-    xil_printf("Send Task Running...\r\n");
+    //xil_printf("Send Task Running...\r\n");
     i_communication->send_dto_reliable(DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelay(pdMS_TO_TICKS(2000)); // 1초마다 상태 출력
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 
 void status_task_test2(void *pvParameters) {
   CommReliableTest comm_reliable_test = {.message_id = IcdId::COMM_RELIABLE_TEST, .counter = 0};
   while (1) {
-    xil_printf("Send Task Running...\r\n");
+    //xil_printf("Send Task Running...\r\n");
     i_communication->send_dto_reliable(DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelay(pdMS_TO_TICKS(2000)); // 1초마다 상태 출력
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 
 void pin_control_task(void *pvParameters) {
   int32_t rad = -3141;
   while (1) {
-    PinControlMainCommand cmd;
-    cmd.message_id = IcdId::PIN_CONTROL_MAIN_COMMAND;
-    cmd.a_motor_rad = rad;
-    cmd.b_motor_rad = rad;
-    xil_printf("Sending PIN_CONTROL_MAIN_COMMAND: a=%ld, b=%ld\r\n", (long)cmd.a_motor_rad, (long)cmd.b_motor_rad);
-    i_communication->send_dto(DeviceId::ACT, (uint8_t *)&cmd, sizeof(PinControlMainCommand));
+    FinControlMainCommand cmd;
+    cmd.message_id = IcdId::FIN_CONTROL_MAIN_COMMAND;
+    cmd.a_motor_theta = rad;
+    cmd.b_motor_theta = rad;
+    xil_printf("Sending PIN_CONTROL_MAIN_COMMAND: a=%ld, b=%ld\r\n", (long)cmd.a_motor_theta, (long)cmd.b_motor_theta);
+    i_communication->send_dto(DeviceId::ACT, (uint8_t *)&cmd, sizeof(FinControlMainCommand));
     rad += 10;
     if (rad > 31416) rad = -3141;
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    vTaskDelay(pdMS_TO_TICKS(2000));
   }
 }
 
 
-void big_data_receive_callback(IcdId id, uint8_t *data, size_t len) {
+void test_receive_callback(IcdId id, uint8_t *data, size_t len) {
   if (id == IcdId::COMM_BIG_DATA_TEST) {
     CommBigDataTest *dto = reinterpret_cast<CommBigDataTest *>(data);
-    xil_printf("Received BIG_DATA: ICD=%04X, len=%d, counter=%u, big_data_size=%u\r\n",
-               static_cast<uint16_t>(id), len, dto->counter, dto->big_data_size);
-    xil_printf("big_data preview: %.64s\r\n", (char *)dto->big_data);
-  } else {
-    xil_printf("Unknown ICD ID received: %04X\r\n", static_cast<uint16_t>(id));
+    xil_printf("Received BIG_DATA: ICD=%04X, len=%d, counter=%u, big_data_size=%u\r\n",static_cast<uint16_t>(id), len, dto->counter, dto->big_data_size);
+  } 
+  else if(id==IcdId::COMM_RELIABLE_TEST){
+    CommReliableTest *cmd = reinterpret_cast<CommReliableTest*>(data);
+    xil_printf("Received data with ICD ID:%04X, length:%d, COMM_RELIABLE_TEST received: counter=%d\r\n", static_cast<uint16_t>(id), len , cmd->counter);
+  }
+  else {
+    xil_printf("[ERROR] Unknown ICD ID received: %04X\r\n", static_cast<uint16_t>(id));
   }
 }
 
-void big_data_send_task(void *pvParameters) {
-  xil_printf("[DEBUG] sizeof(CommBigDataTest)=%d\r\n", sizeof(CommBigDataTest));
+
+void big_data_send_task1(void *pvParameters) {
+  //xil_printf("[DEBUG] sizeof(CommBigDataTest)=%d\r\n", sizeof(CommBigDataTest));
   static CommBigDataTest dto;
   dto.message_id = IcdId::COMM_BIG_DATA_TEST;
   dto.counter = 0;
@@ -193,7 +187,7 @@ void big_data_send_task(void *pvParameters) {
     "every aspect of human civilization from communication and transportation to medicine and warfare. ";
 
   uint32_t base_len = strlen(base);
-  uint32_t target_size = 800 * 1024;  // 800KB
+  uint32_t target_size = 6 * 1024* 1024;  // 6MB
   uint32_t filled = 0;
 
   while (filled < target_size) {
@@ -204,10 +198,46 @@ void big_data_send_task(void *pvParameters) {
   dto.big_data_size = target_size;
   TickType_t last = xTaskGetTickCount();
   while (1) {
-    xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
+    //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
+    i_communication->send_dto_big_data(DeviceId::TEST2, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
+    dto.counter++;
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(180));
+  }
+}
+
+void big_data_send_task2(void *pvParameters) {
+  //xil_printf("[DEBUG] sizeof(CommBigDataTest)=%d\r\n", sizeof(CommBigDataTest));
+  static CommBigDataTest dto;
+  dto.message_id = IcdId::COMM_BIG_DATA_TEST;
+  dto.counter = 0;
+
+  const char *base =
+    "The quick brown fox jumps over the lazy dog. "
+    "In the beginning, there was nothing, and then the universe exploded into existence "
+    "with a spectacular burst of energy and light that spread across the infinite cosmos. "
+    "Scientists have long studied the origins of life on Earth, tracing back billions of years "
+    "to the first single-celled organisms that emerged from the primordial soup of ancient oceans. "
+    "Throughout history, humanity has sought to understand the fundamental nature of reality, "
+    "pushing the boundaries of knowledge through mathematics, philosophy, and empirical observation. "
+    "The development of modern technology has accelerated at an unprecedented pace, transforming "
+    "every aspect of human civilization from communication and transportation to medicine and warfare. ";
+
+  uint32_t base_len = strlen(base);
+  uint32_t target_size = 6 * 1024* 1024;  // 6MB
+  uint32_t filled = 0;
+
+  while (filled < target_size) {
+    uint32_t copy_len = (target_size - filled > base_len) ? base_len : (target_size - filled);
+    memcpy(dto.big_data + filled, base, copy_len);
+    filled += copy_len;
+  }
+  dto.big_data_size = target_size;
+  TickType_t last = xTaskGetTickCount();
+  while (1) {
+    //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
     i_communication->send_dto_big_data(DeviceId::TEST1, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(180));
   }
 }
 
@@ -215,14 +245,14 @@ void big_data_send_task(void *pvParameters) {
 int main(void) {
   static Network::Communication communication;
   i_communication = &communication;
-  //i_communication->object_init(DeviceId::TEST1);
-  i_communication->object_init(DeviceId::TEST2);
-  //i_communication->register_callback((receive_callback_t)receive_callback);
-  i_communication->register_callback((receive_callback_t)big_data_receive_callback);
+  i_communication->object_init(DeviceId::TEST1);
+  //i_communication->object_init(DeviceId::TEST2);
+  i_communication->register_callback((receive_callback_t)test_receive_callback);
   //i_communication->register_callback((receive_callback_t)new_callback);
   //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 1024,NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate(big_data_send_task, (const char *)"big_data_send_task", 2048, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
+  //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, DEFAULT_THREAD_PRIO, NULL);
   //xTaskCreate(pin_control_task, (const char *)"pin_control_task", 1024, NULL, tskIDLE_PRIORITY, NULL);
   vTaskStartScheduler();
 }
