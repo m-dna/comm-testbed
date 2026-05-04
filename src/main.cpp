@@ -122,7 +122,7 @@ void status_task_test1(void *pvParameters) {
   CommReliableTest comm_reliable_test = {.message_id = IcdId::COMM_RELIABLE_TEST, .counter = 0};
   while (1) {
     //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto_reliable(DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto_reliable(DeviceId::UI, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
@@ -199,7 +199,7 @@ void big_data_send_task1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
-    i_communication->send_dto_big_data(DeviceId::TEST2, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
+    i_communication->send_dto_big_data(DeviceId::UI, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(180));
   }
@@ -237,7 +237,7 @@ void big_data_send_task2(void *pvParameters) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
     i_communication->send_dto_big_data(DeviceId::TEST1, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(180));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(500));
   }
 }
 
@@ -252,7 +252,7 @@ int main(void) {
   //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 1024,NULL, tskIDLE_PRIORITY, NULL);
   xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
-  //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, DEFAULT_THREAD_PRIO, NULL);
+  //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(pin_control_task, (const char *)"pin_control_task", 1024, NULL, tskIDLE_PRIORITY, NULL);
   vTaskStartScheduler();
 }
