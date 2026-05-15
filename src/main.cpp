@@ -187,7 +187,7 @@ void big_data_send_task1(void *pvParameters) {
     "every aspect of human civilization from communication and transportation to medicine and warfare. ";
 
   uint32_t base_len = strlen(base);
-  uint32_t target_size = 6 * 1024* 1024;  // 6MB
+  uint32_t target_size = 180 * 320 * 3;  // 178200 bytes (180x320*3 RGB 이미지)
   uint32_t filled = 0;
 
   while (filled < target_size) {
@@ -199,9 +199,9 @@ void big_data_send_task1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
-    i_communication->send_dto_big_data(DeviceId::UI, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
+    i_communication->send_dto_big_data(DeviceId::TEST2, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(180));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
 }
 
@@ -223,7 +223,7 @@ void big_data_send_task2(void *pvParameters) {
     "every aspect of human civilization from communication and transportation to medicine and warfare. ";
 
   uint32_t base_len = strlen(base);
-  uint32_t target_size = 6 * 1024* 1024;  // 6MB
+  uint32_t target_size = 180 * 320 * 3;  // 178200 bytes (180x320*3 RGB 이미지)
   uint32_t filled = 0;
 
   while (filled < target_size) {
@@ -237,7 +237,7 @@ void big_data_send_task2(void *pvParameters) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
     i_communication->send_dto_big_data(DeviceId::TEST1, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(500));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
 }
 
