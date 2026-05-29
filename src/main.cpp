@@ -157,7 +157,7 @@ void status_task_test1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::NONE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
   }
@@ -168,7 +168,7 @@ void status_task_test2(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::NONE,DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
   }
@@ -328,15 +328,15 @@ int main(void) {
     
   static Network::Communication communication;
   i_communication = &communication;
-  //i_communication->init(DeviceId::TEST1);
-  i_communication->init(DeviceId::TEST2);
+  i_communication->init(DeviceId::TEST1);
+  //i_communication->init(DeviceId::TEST2);
   i_communication->register_callback((receive_callback_t)test_receive_callback);
   //i_communication->register_callback((receive_callback_t)new_callback);
-  //xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_act_test,(const char *)"status_task_act_test", 1024,NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY, NULL);
+  //xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(pin_control_task, (const char *)"pin_control_task", 1024, NULL, tskIDLE_PRIORITY, NULL);
