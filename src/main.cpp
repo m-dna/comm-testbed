@@ -157,7 +157,7 @@ void status_task_test1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto(TypeFlag::NONE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
   }
@@ -179,9 +179,11 @@ void send_task_for_ui(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::UI, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto(TypeFlag::NONE,DeviceId::UI, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
+    i_communication->send_dto(TypeFlag::NONE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    comm_reliable_test.counter++;
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(20));
   }
 }
 
@@ -204,11 +206,11 @@ void pin_control_task(void *pvParameters) {
 void test_receive_callback(IcdId id, uint8_t *data, size_t len) {
   if (id == IcdId::COMM_BIG_DATA_TEST) {
     CommBigDataTest *dto = reinterpret_cast<CommBigDataTest *>(data);
-    xil_printf("Received BIG_DATA: ICD=%04X, len=%d, counter=%u, big_data_size=%u\r\n",static_cast<uint16_t>(id), len, dto->counter, dto->big_data_size);
+    //xil_printf("Received BIG_DATA: ICD=%04X, len=%d, counter=%u, big_data_size=%u\r\n",static_cast<uint16_t>(id), len, dto->counter, dto->big_data_size);
   } 
   else if(id==IcdId::COMM_RELIABLE_TEST){
     CommReliableTest *cmd = reinterpret_cast<CommReliableTest*>(data);
-    xil_printf("Received data with ICD ID:%04X, length:%d, COMM_RELIABLE_TEST received: counter=%d\r\n", static_cast<uint16_t>(id), len , cmd->counter);
+    //xil_printf("Received data with ICD ID:%04X, length:%d, COMM_RELIABLE_TEST received: counter=%d\r\n", static_cast<uint16_t>(id), len , cmd->counter);
   }
   else {
     xil_printf("[ERROR] Unknown ICD ID received: %04X\r\n", static_cast<uint16_t>(id));
@@ -319,7 +321,7 @@ void big_data_send_for_ui(void *pvParameters) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
     i_communication->send_dto(TypeFlag::NONE, DeviceId::UI, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(50));
   }
 }
 
@@ -332,11 +334,11 @@ int main(void) {
   //i_communication->init(DeviceId::TEST2);
   i_communication->register_callback((receive_callback_t)test_receive_callback);
   //i_communication->register_callback((receive_callback_t)new_callback);
-  xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY+2, NULL);
   //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(status_task_act_test,(const char *)"status_task_act_test", 1024,NULL, tskIDLE_PRIORITY, NULL);
-  //xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY+1, NULL);
   //xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(pin_control_task, (const char *)"pin_control_task", 1024, NULL, tskIDLE_PRIORITY, NULL);
