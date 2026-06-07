@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>cheoljun99</name>
+	<name>comm_testbed</name>
 	<comment>Created by Vitis v2022.1</comment>
 	<projects>
-		<project>cheoljun99_wrapper</project>
+		<project>comm_testbed_wrapper</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

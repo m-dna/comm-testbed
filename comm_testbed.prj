@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ASCII"?>
+<sdkproject:SdkProject xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:sdkproject="http://www.xilinx.com/sdkproject" name="comm_testbed" location="C:/Users/cheoljun99/workspace/comm_testbed" platform="C:/Users/cheoljun99/workspace/comm_testbed_wrapper/export/comm_testbed_wrapper/comm_testbed_wrapper.xpfm" platformUID="xilinx:zybo-z7-10::0.0(custom)" systemProject="comm_testbed_system" sysConfig="comm_testbed_wrapper" runtime="cpp" cpu="freertos10_xilinx_ps7_cortexa9_0" cpuInstance="ps7_cortexa9_0" os="freertos10_xilinx" language="CPP" mssSignature="d703dd4329bb145a8ebd07cdf2858881">
+  <configuration name="Debug" id="xilinx.gnu.armv7.exe.debug.15823444">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+    <lastBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <configuration name="Release" id="xilinx.gnu.armv7.exe.release.909811201" dirty="true">
+    <configBuildOptions xsi:type="sdkproject:SdkOptions"/>
+  </configuration>
+  <template appTemplateName="empty_application"/>
+</sdkproject:SdkProject>
