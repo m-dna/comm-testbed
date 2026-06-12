@@ -121,7 +121,7 @@ void status_task_test1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
 	  xil_printf("Sending comm_reliable_test: counter=%u\r\n", comm_reliable_test.counter);
-    i_communication->send_dto( static_cast<TypeFlag>(static_cast<uint8_t>(TypeFlag::SECURE) | static_cast<uint8_t>(TypeFlag::RELIABLE)),DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto( (TypeFlag)((uint8_t)TypeFlag::SECURE | (uint8_t)TypeFlag::RELIABLE),DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
@@ -132,7 +132,7 @@ void status_task_test2(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
     xil_printf("Sending comm_reliable_test: counter=%u\r\n", comm_reliable_test.counter);
-    i_communication->send_dto(static_cast<TypeFlag>(static_cast<uint8_t>(TypeFlag::SECURE) | static_cast<uint8_t>(TypeFlag::RELIABLE)),DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto((TypeFlag)((uint8_t)TypeFlag::SECURE | (uint8_t)TypeFlag::RELIABLE),DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
     vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
