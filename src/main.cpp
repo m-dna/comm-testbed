@@ -120,10 +120,10 @@ void status_task_test1(void *pvParameters) {
   CommReliableTest comm_reliable_test = {.message_id = IcdId::COMM_RELIABLE_TEST, .counter = 0};
   TickType_t last = xTaskGetTickCount();
   while (1) {
-    //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::SECURE,DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+	  xil_printf("Sending comm_reliable_test: counter=%u\r\n", comm_reliable_test.counter);
+    i_communication->send_dto( static_cast<TypeFlag>(static_cast<uint8_t>(TypeFlag::SECURE) | static_cast<uint8_t>(TypeFlag::RELIABLE)),DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
 }
 
@@ -131,10 +131,10 @@ void status_task_test2(void *pvParameters) {
   CommReliableTest comm_reliable_test = {.message_id = IcdId::COMM_RELIABLE_TEST, .counter = 0};
   TickType_t last = xTaskGetTickCount();
   while (1) {
-    //xil_printf("Send Task Running...\r\n");
-    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    xil_printf("Sending comm_reliable_test: counter=%u\r\n", comm_reliable_test.counter);
+    i_communication->send_dto(static_cast<TypeFlag>(static_cast<uint8_t>(TypeFlag::SECURE) | static_cast<uint8_t>(TypeFlag::RELIABLE)),DeviceId::TEST1, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(1000));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
   }
 }
 
@@ -277,12 +277,12 @@ void big_data_send_for_ui(void *pvParameters) {
 int main(void) {
   static Network::Communication communication;
   i_communication = &communication;
-  i_communication->init(DeviceId::TEST1);
-  //i_communication->init(DeviceId::TEST2);
+  //i_communication->init(DeviceId::TEST1);
+  i_communication->init(DeviceId::TEST2);
   i_communication->register_callback((receive_callback_t)test_receive_callback);
   //xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY+2, NULL);
-  //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 1024,NULL, tskIDLE_PRIORITY, NULL);
-  //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 1024,NULL, tskIDLE_PRIORITY, NULL);
+  //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 32768,NULL, tskIDLE_PRIORITY+3, NULL);
+  xTaskCreate(status_task_test2, (const char *)"status_task_test2", 32768,NULL, tskIDLE_PRIORITY+3, NULL);
   //xTaskCreate(status_task_act_test,(const char *)"status_task_act_test", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY+1, NULL);
   //xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
