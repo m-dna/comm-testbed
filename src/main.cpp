@@ -82,6 +82,7 @@
 
 Network::ICommunication *i_communication = nullptr;
 
+
 void status_task_act_test(void *pvParameters) {
 
   FinControlMainCommand fin_control_main_command = {
@@ -121,9 +122,9 @@ void status_task_test1(void *pvParameters) {
   TickType_t last = xTaskGetTickCount();
   while (1) {
 	  xil_printf("Sending comm_reliable_test: counter=%u\r\n", comm_reliable_test.counter);
-    i_communication->send_dto( (TypeFlag)((uint8_t)TypeFlag::SECURE | (uint8_t)TypeFlag::RELIABLE),DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
+    i_communication->send_dto( (TypeFlag)((uint8_t)TypeFlag::RELIABLE | (uint8_t)TypeFlag::SECURE),DeviceId::TEST2, (uint8_t *)&comm_reliable_test, sizeof(CommReliableTest));
     comm_reliable_test.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(30));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(10));
   }
 }
 
@@ -170,7 +171,6 @@ void big_data_send_task1(void *pvParameters) {
   static CommBigDataTest dto;
   dto.message_id = IcdId::COMM_BIG_DATA_TEST;
   dto.counter = 0;
-
   const char *base =
     "The quick brown fox jumps over the lazy dog. "
     "In the beginning, there was nothing, and then the universe exploded into existence "
@@ -194,10 +194,13 @@ void big_data_send_task1(void *pvParameters) {
   dto.big_data_size = target_size;
   TickType_t last = xTaskGetTickCount();
   while (1) {
-    //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
-    i_communication->send_dto(TypeFlag::RELIABLE,DeviceId::TEST2, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
+    xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
+    i_communication->send_dto((TypeFlag)((uint8_t)TypeFlag::SECURE),DeviceId::TEST2, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(200));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(150));
+    // 보안 통신 최대 110ms
+    // 신뢰성 통신 최대 130ms
+    // 신뢰성+보안 통신 최대 150ms
   }
 }
 
@@ -233,7 +236,7 @@ void big_data_send_task2(void *pvParameters) {
     //xil_printf("Sending BIG_DATA: counter=%u, size=%u\r\n", dto.counter, dto.big_data_size);
     i_communication->send_dto(TypeFlag::NONE,DeviceId::TEST1, reinterpret_cast<uint8_t *>(&dto), sizeof(CommBigDataTest));
     dto.counter++;
-    vTaskDelayUntil(&last, pdMS_TO_TICKS(500));
+    vTaskDelayUntil(&last, pdMS_TO_TICKS(50));
   }
 }
 
@@ -277,15 +280,15 @@ void big_data_send_for_ui(void *pvParameters) {
 int main(void) {
   static Network::Communication communication;
   i_communication = &communication;
-  //i_communication->init(DeviceId::TEST1);
-  i_communication->init(DeviceId::TEST2);
+  i_communication->init(DeviceId::TEST1);
+  //i_communication->init(DeviceId::TEST2);
   i_communication->register_callback((receive_callback_t)test_receive_callback);
   //xTaskCreate(send_task_for_ui, (const char *)"send_task_for_ui", 1024,NULL, tskIDLE_PRIORITY+2, NULL);
   //xTaskCreate(status_task_test1, (const char *)"status_task_test1", 32768,NULL, tskIDLE_PRIORITY+3, NULL);
-  xTaskCreate(status_task_test2, (const char *)"status_task_test2", 32768,NULL, tskIDLE_PRIORITY+3, NULL);
+  //xTaskCreate(status_task_test2, (const char *)"status_task_test2", 32768,NULL, tskIDLE_PRIORITY+3, NULL);
   //xTaskCreate(status_task_act_test,(const char *)"status_task_act_test", 1024,NULL, tskIDLE_PRIORITY, NULL);
   //xTaskCreate(big_data_send_for_ui, (const char *)"big_data_send_for_ui", 2048, NULL, tskIDLE_PRIORITY+1, NULL);
-  //xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 2048, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(big_data_send_task1, (const char *)"big_data_send_task1", 32768, NULL, tskIDLE_PRIORITY+3, NULL);
   //xTaskCreate(big_data_send_task2, (const char *)"big_data_send_task2", 2048, NULL, tskIDLE_PRIORITY, NULL);
   vTaskStartScheduler();
 }
